@@ -1,0 +1,15 @@
+{
+  "dataset": "ai4bharat/IndicCorpV2",
+  "config_name": "indiccorp_v2",
+  "split_used": "ben_Beng",
+  "language": "Bengali",
+  "script": "Bengali (Beng)",
+  "source_file_in_repo": "data/bn.txt",
+  "download_date_utc": "2026-08-20T14:23:51.517965+00:00",
+  "total_rows_in_source_streamed_through": 599999,
+  "sample_size": 300000,
+  "sampling_method": "prefix sampling (first N non-empty rows of stream, stopped early -- not a full-split uniform sample; relies on source not being sorted in a way that clusters similar text early)",
+  "random_seed": null,
+  "text_field_used": "text",
+  "note": "total_rows_in_source_streamed_through equals the full split size only if the stream was exhausted; for large splits this script streams through everything to guarantee a uniform sample, which can take a while -- see timing above."
+}
