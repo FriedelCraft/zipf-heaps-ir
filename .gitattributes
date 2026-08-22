@@ -1,6 +1,2 @@
-*.txt filter=lfs diff=lfs merge=lfs -text
 data filter=lfs diff=lfs merge=lfs -text
 data/samples/*.txt filter=lfs diff=lfs merge=lfs -text
-data/raw/*.txt filter=lfs diff=lfs merge=lfs -text
-data/processed/*.txt filter=lfs diff=lfs merge=lfs -text
-./data/samples/*.txt filter=lfs diff=lfs merge=lfs -text
