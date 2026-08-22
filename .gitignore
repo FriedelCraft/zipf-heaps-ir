@@ -1,2 +1,2 @@
-./data/raw/bn_indiccorp_full_raw.txt
-./data/processed/bn_cleaned_corpus_full.txt
+data/raw/bn_indiccorp_full_raw.txt
+data/processed/bn_cleaned_corpus_full.txt
