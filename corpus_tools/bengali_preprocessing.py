@@ -1,66 +1,49 @@
 """
-Bengali Corpus Preprocessing Pipeline
-Source corpus: AI4Bharat IndicCorp (Bengali subset)
-  https://ai4bharat.iitm.ac.in/corpora  (or via HuggingFace: ai4bharat/IndicCorpV2)
+Memory-safe preprocessing for the FULL Bengali IndicCorpV2 raw file.
 
-Purpose: produce a cleaned, tokenized Bengali corpus + progressive
-size samples for downstream Zipf's Law and Heaps' Law analysis.
+This version:
+  - streams the raw file line by line
+  - tracks raw/processed stats with running Counters (no giant token list)
+  - writes progressive sample files incrementally, closing each one the
+    moment its token threshold is reached, instead of slicing a full list
 
 Usage:
-    python bengali_preprocessing.py --input bn_indiccorp_raw.txt --max_lines 200000
+    python bengali_preprocessing.py --input bn_indiccorp_full_raw.txt
 """
 
 import re
 import json
-import random
 import unicodedata
 import argparse
 from collections import Counter
 
-# ---------------------------------------------------------------------
-# Optional: better tokenization via indic-nlp-library
-#   pip install indic-nlp-library
-# Falls back to whitespace tokenization if not installed.
-# ---------------------------------------------------------------------
 try:
     from indicnlp.tokenize import indic_tokenize
     HAVE_INDICNLP = True
 except ImportError:
     HAVE_INDICNLP = False
 
-
-# ---------------------------------------------------------------------
-# Regex patterns
-# ---------------------------------------------------------------------
 URL_RE = re.compile(r'https?://\S+|www\.\S+')
 EMAIL_RE = re.compile(r'\S+@\S+')
 BENGALI_DIGIT_RE = re.compile(r'[০-৯]+')
 ASCII_DIGIT_RE = re.compile(r'[0-9]+')
-# Bengali + common punctuation (danda '।', double danda '॥', quotes, etc.)
 PUNCT_RE = re.compile(r'[।॥,.!?;:\'"()\[\]{}\-–—…‘’“”/\\|@#$%^&*_+=<>~`]')
 MULTISPACE_RE = re.compile(r'\s+')
-# Bengali Unicode block: U+0980–U+09FF. Keep only these + whitespace
-# (this strips stray English words, emoji, other scripts).
 NON_BENGALI_RE = re.compile(r'[^\u0980-\u09FF\s]')
 
 
 def normalize_unicode(text: str) -> str:
-    """NFC normalization — merges combining vowel signs/conjuncts consistently.
-    Critical for Bengali: without this, visually identical words can hash
-    to different token strings and silently inflate the vocabulary count."""
     return unicodedata.normalize('NFC', text)
 
 
-def clean_text(text: str, remove_numbers=True, keep_bengali_only=True) -> str:
+def clean_text(text: str) -> str:
     text = normalize_unicode(text)
     text = URL_RE.sub(' ', text)
     text = EMAIL_RE.sub(' ', text)
-    if remove_numbers:
-        text = BENGALI_DIGIT_RE.sub(' ', text)
-        text = ASCII_DIGIT_RE.sub(' ', text)
+    text = BENGALI_DIGIT_RE.sub(' ', text)
+    text = ASCII_DIGIT_RE.sub(' ', text)
     text = PUNCT_RE.sub(' ', text)
-    if keep_bengali_only:
-        text = NON_BENGALI_RE.sub(' ', text)
+    text = NON_BENGALI_RE.sub(' ', text)
     text = MULTISPACE_RE.sub(' ', text).strip()
     return text
 
@@ -71,88 +54,101 @@ def tokenize(text: str):
     return text.split()
 
 
-def load_lines(path: str, max_lines=None):
-    lines = []
-    with open(path, encoding='utf-8') as f:
-        for i, line in enumerate(f):
-            if max_lines is not None and i >= max_lines:
-                break
-            line = line.strip()
-            if line:
-                lines.append(line)
-    return lines
-
-
-def basic_stats(tokens, label="corpus"):
-    counter = Counter(tokens)
-    n_tokens = len(tokens)
-    n_types = len(counter)
-    return {
-        'label': label,
-        'total_tokens': n_tokens,
-        'unique_types': n_types,
-        'type_token_ratio': round(n_types / n_tokens, 4) if n_tokens else 0,
-        'top20': counter.most_common(20),
-    }
-
-
-def raw_stats(lines, label="raw"):
-    """Stats on raw whitespace-split text, no cleaning — the baseline
-    for the raw-vs-processed comparison."""
-    tokens = [tok for line in lines for tok in line.split()]
-    return basic_stats(tokens, label)
-
-
-def process_corpus(lines):
-    tokens = []
-    for line in lines:
-        cleaned = clean_text(line)
-        tokens.extend(tokenize(cleaned))
-    return tokens
-
-
-def save_progressive_samples(tokens, out_prefix, sizes):
-    """Write nested prefix samples of increasing size — same underlying
-    text, just truncated — so Heaps'/Zipf's curves are directly comparable
-    across sample sizes (no confound from re-sampling different text)."""
-    for size in sizes:
-        sample = tokens[:size]
-        fname = f"{out_prefix}_{size}.txt"
-        with open(fname, 'w', encoding='utf-8') as f:
-            f.write(' '.join(sample))
-        print(f"  wrote {fname} ({len(sample)} tokens)")
-
-
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--input', required=True, help='raw IndicCorp Bengali text file, one doc/line per line')
-    ap.add_argument('--max_lines', type=int, default=200000, help='cap raw lines read (corpus is huge; keep this manageable)')
+    ap.add_argument('--input', required=True, help='raw IndicCorp Bengali text file')
+    ap.add_argument('--out_cleaned', default='bn_cleaned_corpus_full.txt')
     ap.add_argument('--out_prefix', default='bn_sample')
+    ap.add_argument('--progress_every_lines', type=int, default=1_000_000)
     args = ap.parse_args()
 
-    print(f"Loading up to {args.max_lines} lines from {args.input} ...")
-    lines = load_lines(args.input, max_lines=args.max_lines)
-    print(f"Loaded {len(lines)} lines.")
+    # Progressive sample thresholds (nested prefixes of the cleaned token stream)
+    sample_sizes = [10_000, 50_000, 100_000, 500_000, 1_000_000,
+                     5_000_000, 10_000_000]
 
-    print("Computing raw stats...")
-    rstats = raw_stats(lines)
+    # Open one file handle per sample threshold; close each as soon as it's full
+    sample_handles = {size: open(f"{args.out_prefix}_{size}.txt", 'w', encoding='utf-8')
+                       for size in sample_sizes}
+    sample_counts = {size: 0 for size in sample_sizes}
+    sample_done = set()
 
-    print("Cleaning + tokenizing...")
-    tokens = process_corpus(lines)
-    pstats = basic_stats(tokens, "processed")
+    raw_counter = Counter()
+    processed_counter = Counter()
+    raw_token_total = 0
+    processed_token_total = 0
+    lines_read = 0
 
-    print(json.dumps({"raw": rstats, "processed": pstats}, ensure_ascii=False, indent=2))
+    print(f"Streaming {args.input} ...")
+    with open(args.input, encoding='utf-8') as fin, \
+         open(args.out_cleaned, 'w', encoding='utf-8') as fout_cleaned:
 
-    with open("bn_cleaned_corpus.txt", "w", encoding='utf-8') as f:
-        f.write(' '.join(tokens))
-    print(f"\nSaved full cleaned corpus: bn_cleaned_corpus.txt ({len(tokens)} tokens)")
+        for line in fin:
+            lines_read += 1
+            line = line.strip()
+            if not line:
+                continue
 
-    print("\nSaving progressive samples for Zipf/Heaps analysis...")
-    sizes = [10_000, 50_000, 100_000, 500_000, 1_000_000]
-    sizes = [s for s in sizes if s <= len(tokens)] + (
-        [len(tokens)] if len(tokens) not in sizes else []
-    )
-    save_progressive_samples(tokens, args.out_prefix, sizes)
+            # raw stats (whitespace split, no cleaning)
+            raw_tokens = line.split()
+            raw_token_total += len(raw_tokens)
+            raw_counter.update(raw_tokens)
+
+            # cleaned + tokenized
+            cleaned = clean_text(line)
+            tokens = tokenize(cleaned)
+            if not tokens:
+                continue
+
+            processed_token_total += len(tokens)
+            processed_counter.update(tokens)
+            fout_cleaned.write(' '.join(tokens) + ' ')
+
+            # write into any still-open progressive sample files
+            for size in sample_sizes:
+                if size in sample_done:
+                    continue
+                remaining = size - sample_counts[size]
+                take = tokens[:remaining]
+                sample_handles[size].write(' '.join(take) + ' ')
+                sample_counts[size] += len(take)
+                if sample_counts[size] >= size:
+                    sample_handles[size].close()
+                    sample_done.add(size)
+                    print(f"  sample_{size} complete ({size:,} tokens)")
+
+            if lines_read % args.progress_every_lines == 0:
+                print(f"  ...{lines_read:,} lines read, "
+                      f"{processed_token_total:,} processed tokens so far")
+
+    # close any sample files that never hit their threshold (corpus smaller than target)
+    for size in sample_sizes:
+        if size not in sample_done:
+            sample_handles[size].close()
+            print(f"  sample_{size} only reached {sample_counts[size]:,} tokens "
+                  f"(corpus exhausted before threshold)")
+
+    raw_stats = {
+        'label': 'raw',
+        'total_tokens': raw_token_total,
+        'unique_types': len(raw_counter),
+        'type_token_ratio': round(len(raw_counter) / raw_token_total, 4) if raw_token_total else 0,
+        'top20': raw_counter.most_common(20),
+    }
+    processed_stats = {
+        'label': 'processed',
+        'total_tokens': processed_token_total,
+        'unique_types': len(processed_counter),
+        'type_token_ratio': round(len(processed_counter) / processed_token_total, 4) if processed_token_total else 0,
+        'top20': processed_counter.most_common(20),
+    }
+
+    print(f"\nSaved full cleaned corpus: {args.out_cleaned} ({processed_token_total:,} tokens)")
+    print("\n--- Raw vs Processed stats (for your methodology doc) ---")
+    print(json.dumps({"raw": raw_stats, "processed": processed_stats}, ensure_ascii=False, indent=2))
+
+    with open('bn_raw_vs_processed_stats.json', 'w', encoding='utf-8') as f:
+        json.dump({"raw": raw_stats, "processed": processed_stats}, f, ensure_ascii=False, indent=2)
+    print("\nAlso saved to bn_raw_vs_processed_stats.json")
 
 
 if __name__ == "__main__":
