@@ -1,0 +1,38 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large / private data
+data/raw/*
+!data/raw/README.md
+data/processed/*
+!data/processed/README.md
+
+# Results (generated artifacts — keep folder structure only)
+results/final/figures/*
+results/final/tables/*
+results/final/metrics/*
+results/demo/figures/*
+results/demo/tables/*
+results/demo/metrics/*
+!results/final/figures/.gitkeep
+!results/final/tables/.gitkeep
+!results/final/metrics/.gitkeep
+!results/demo/figures/.gitkeep
+!results/demo/tables/.gitkeep
+!results/demo/metrics/.gitkeep
+
+# IDE
+.vscode/
+.idea/

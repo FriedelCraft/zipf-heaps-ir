@@ -1,0 +1,74 @@
+# =============================================================================
+# CONFIGURATION — Heaps' Law Analysis Project (standalone)
+# =============================================================================
+# Tests V(N) = K * N^beta (vocabulary size as a function of tokens
+# processed). Nothing in this file is corpus-specific — the checkpoint
+# schedule and fitting thresholds work unchanged on a small demo corpus
+# or a multi-gigabyte real one.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# GENERAL
+# ---------------------------------------------------------------------------
+general:
+  encoding: "utf-8"
+
+# ---------------------------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------------------------
+paths:
+  data_raw_dir: "data/raw"
+  data_processed_dir: "data/processed"
+  data_demo_dir: "data/demo"
+
+  # Main expected corpus locations
+  processed_corpus: "data/processed/bengali_corpus.txt"
+  demo_corpus: "data/demo/demo_bengali_corpus.txt"
+
+  # Output root (mode-dependent subfolder is appended at runtime: final/ or demo/)
+  results_root: "results"
+
+# ---------------------------------------------------------------------------
+# CORPUS STREAMING — memory-safety settings for multi-GB corpora
+# ---------------------------------------------------------------------------
+# The corpus is read in fixed-size byte chunks rather than all at once or
+# line-by-line, so peak memory stays bounded regardless of file size or
+# line length. See src/corpus_streaming.py:stream_corpus_for_heaps().
+corpus_streaming:
+  chunk_size_mb: 8                  # bytes read per chunk (8 MiB default)
+  progress_log_interval_mb: 250     # log progress roughly every N MB processed
+
+# ---------------------------------------------------------------------------
+# HEAPS' LAW ANALYSIS
+# ---------------------------------------------------------------------------
+heaps:
+  # Checkpoint schedule (src/heaps_analysis.py:generate_checkpoint_targets).
+  # Logarithmically spaced: starts at first_checkpoint_tokens and advances
+  # by checkpoints_per_decade points per order of magnitude, continuing
+  # automatically until the corpus ends — the total checkpoint count is
+  # NOT fixed/hardcoded, it scales with however large the corpus turns
+  # out to be (e.g. checkpoints_per_decade=4 gives ~19 checkpoints across
+  # a 440-million-token corpus, but only ~5 across a 60,000-token one).
+  first_checkpoint_tokens: 10000
+  checkpoints_per_decade: 4
+  max_checkpoints: 200              # safety cap against pathological configs
+
+  # Checkpoints below this many tokens are excluded from the regression
+  # fit (early-corpus vocabulary counts are noisy) but still appear in
+  # the saved growth CSV and the vocabulary-growth figure.
+  min_tokens_for_fit: 100000
+
+  # Minimum number of (post-filter) checkpoints required to attempt a
+  # fit at all.
+  min_observations_for_fit: 5
+
+  # Label written into the cost-project-compatible export row (see
+  # heaps_analysis.build_cost_project_compatible_row). Purely descriptive.
+  corpus_version: "bengali_v1"
+
+# ---------------------------------------------------------------------------
+# VISUALIZATION
+# ---------------------------------------------------------------------------
+visualization:
+  dpi: 200
+  figure_size: [8, 6]
