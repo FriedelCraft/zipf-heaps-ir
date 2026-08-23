@@ -1,0 +1,4 @@
+scenario,corpus_size_words,data_cost_usd,value_type,source_or_assumption
+SMALL,10000000,100000.0,assignment_assumption,"Assignment: USD 1,000 per 100,000 words"
+MEDIUM,100000000,1000000.0,assignment_assumption,"Assignment: USD 1,000 per 100,000 words"
+LARGE,1000000000,10000000.0,assignment_assumption,"Assignment: USD 1,000 per 100,000 words"

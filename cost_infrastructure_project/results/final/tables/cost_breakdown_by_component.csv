@@ -1,0 +1,9 @@
+component,cost_type,search_oriented_usd,llm_oriented_usd,search_assumption_type,llm_assumption_type,search_confidence_pct,llm_confidence_pct
+data_acquisition,one_time,1000000.0,1000000.0,assignment_input,assignment_input,0,0
+engineering_setup,one_time,45000.0,55000.0,modelling_assumption,modelling_assumption,35,35
+indexing_or_training,one_time,50000.0,17600.0,modelling_assumption,formula_derived,25,20
+preprocessing_setup,one_time,35000.0,42000.0,modelling_assumption,modelling_assumption,30,30
+compute,recurring_annual,20000.0,30000.0,modelling_assumption,modelling_assumption,30,30
+maintenance_operations,recurring_annual,15000.0,18000.0,modelling_assumption,modelling_assumption,30,30
+serving_inference,recurring_annual,25000.0,40000.0,modelling_assumption,modelling_assumption,35,35
+storage,recurring_annual,12000.0,9000.0,modelling_assumption,modelling_assumption,25,25

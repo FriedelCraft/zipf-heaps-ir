@@ -1,0 +1,43 @@
+==============================================================================
+INTEGRATED SUMMARY — Cost / Infrastructure Component
+==============================================================================
+
+NOTE: Zipf's Law analysis is a separate, independently-runnable component (zipf_analysis_project) and is not included in this summary. Combine its zipf_summary.txt output manually if you need the full three-part narrative.
+
+==============================================================================
+SECTION 1 — FACT / ASSIGNMENT INPUT
+(given by the course brief; not modelled, not uncertain)
+==============================================================================
+  SMALL: 10,000,000 words -> $100,000.00 (assignment rule: USD 1,000 per 100,000 words)
+  MEDIUM: 100,000,000 words -> $1,000,000.00 (assignment rule: USD 1,000 per 100,000 words)
+  LARGE: 1,000,000,000 words -> $10,000,000.00 (assignment rule: USD 1,000 per 100,000 words)
+
+==============================================================================
+SECTION 2 — SCENARIO ASSUMPTION
+(transparent, reproducible architectural cost models; NOT real company financial data — see assumptions/cost_assumptions.csv)
+==============================================================================
+  Scenario shown: MEDIUM
+  LLM_Oriented_System [BASE]: initial=$1,114,600.00, recurring_annual=$97,000.00 [COMPLETE]
+  Search_Oriented_System [BASE]: initial=$1,130,000.00, recurring_annual=$72,000.00 [COMPLETE]
+  See cost_sensitivity_analysis.csv for LOW/BASE/HIGH ranges per system, and cost_breakdown_by_component.csv for the per-component detail behind these totals.
+
+  Components intentionally NOT modelled (excluded, not fabricated):
+    - Marketing / user acquisition: Highly company- and market-specific; no defensible scaling rule exists relative to corpus size alone.
+    - Legal / regulatory compliance: Depends on jurisdiction-specific requirements (data protection, content regulation) unrelated to corpus or model size; not something this scenario model can estimate.
+    - Customer support operations: Depends on user base size, not corpus or model size — no reasonable scaling assumption available here.
+
+==============================================================================
+SECTION 3 — QUALITATIVE INTERPRETATION
+(narrative only; Heaps parameters are NEVER multiplied into any cost figure above)
+==============================================================================
+
+[HEAPS] Vocabulary growth as corpus size increases:
+  Heaps' Law parameters (from teammate's results): beta=0.5903138252024519, K=25.41598993561323, R^2=0.9997147848520566.
+  Vocabulary growth projections (Heaps' Law, multiplier^beta):
+    2.0x corpus size -> projected vocabulary ~4,536,029 (growth factor 1.5056)
+    5.0x corpus size -> projected vocabulary ~7,790,858 (growth factor 2.5859)
+    10.0x corpus size -> projected vocabulary ~11,729,715 (growth factor 3.8933)
+    100.0x corpus size -> projected vocabulary ~45,666,872 (growth factor 15.1575)
+
+  Continued Heaps vocabulary growth (if observed) suggests that supporting a language may require continued data acquisition to improve vocabulary coverage. This is a qualitative implication only — it is not converted into a cost multiplier anywhere in this project. The SCENARIO ASSUMPTION section above scales with corpus-size SCENARIO (SMALL/MEDIUM/LARGE) alone, independent of any Zipf or Heaps statistic.
+==============================================================================

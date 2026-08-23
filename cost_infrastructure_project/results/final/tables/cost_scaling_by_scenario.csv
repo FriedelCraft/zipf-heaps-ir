@@ -1,0 +1,7 @@
+system,scenario,sensitivity_level,initial_total_usd,recurring_annual_total_usd,n_components_configured,n_components_expected,missing_components,n_components_incomplete,is_complete
+LLM_Oriented_System,SMALL,BASE,149400.0,18500.0,8,8,[],0,True
+Search_Oriented_System,SMALL,BASE,140000.0,14000.0,8,8,[],0,True
+LLM_Oriented_System,MEDIUM,BASE,1114600.0,97000.0,8,8,[],0,True
+Search_Oriented_System,MEDIUM,BASE,1130000.0,72000.0,8,8,[],0,True
+LLM_Oriented_System,LARGE,BASE,10259400.0,638000.0,8,8,[],0,True
+Search_Oriented_System,LARGE,BASE,10670000.0,460000.0,8,8,[],0,True

@@ -16,14 +16,8 @@ Thumbs.db
 # External teammate inputs (keep folder + README only)
 data/external/*
 !data/external/README.md
-
-# Results (generated artifacts — keep folder structure only)
-results/final/figures/*
-results/final/tables/*
-results/final/metrics/*
-!results/final/figures/.gitkeep
-!results/final/tables/.gitkeep
-!results/final/metrics/.gitkeep
+# Results
+# Final generated results are included in the repository.
 
 # IDE
 .vscode/
