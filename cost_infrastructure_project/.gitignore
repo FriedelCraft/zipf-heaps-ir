@@ -1,0 +1,30 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# External teammate inputs (keep folder + README only)
+data/external/*
+!data/external/README.md
+
+# Results (generated artifacts — keep folder structure only)
+results/final/figures/*
+results/final/tables/*
+results/final/metrics/*
+!results/final/figures/.gitkeep
+!results/final/tables/.gitkeep
+!results/final/metrics/.gitkeep
+
+# IDE
+.vscode/
+.idea/
