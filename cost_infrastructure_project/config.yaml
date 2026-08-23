@@ -1,0 +1,113 @@
+# =============================================================================
+# CONFIGURATION — Cost / Infrastructure / Integration Project (standalone)
+# =============================================================================
+# Trimmed from the combined Bengali IR project's config.yaml: only sections
+# relevant to the assignment-based data cost model, LM training scenarios,
+# the Google Search vs Sarvam infrastructure model, Heaps-results
+# integration, and visualization are kept. Corpus/Zipf configuration lives
+# in the separate zipf_analysis_project.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# GENERAL
+# ---------------------------------------------------------------------------
+general:
+  random_seed: 42
+  encoding: "utf-8"
+
+# ---------------------------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------------------------
+paths:
+  data_external_dir: "data/external"
+
+  # Teammate's Heaps' Law results
+  heaps_results_file: "data/external/heaps_results.csv"
+
+  # Cost assumptions (single source of truth for infra cost figures)
+  cost_assumptions_file: "assumptions/cost_assumptions.csv"
+
+  # Output root
+  results_root: "results"
+
+# ---------------------------------------------------------------------------
+# COST MODEL — ASSIGNMENT-PROVIDED ASSUMPTION
+# ---------------------------------------------------------------------------
+cost_model:
+  # ASSIGNMENT-PROVIDED DATA COST BASELINE (do not modify without instructor input)
+  usd_per_100k_words: 1000
+
+  # Corpus size scenarios (in words) — used for cost scaling only; this
+  # project does not read an actual corpus file.
+  scenarios:
+    SMALL: 10000000        # 10 million words
+    MEDIUM: 100000000      # 100 million words
+    LARGE: 1000000000      # 1 billion words
+
+# ---------------------------------------------------------------------------
+# LANGUAGE MODEL COST SCENARIOS (Approach A / B — src/cost_model.py)
+# ---------------------------------------------------------------------------
+lm_cost:
+  from_scratch:
+    number_of_accelerators: 64
+    accelerator_cost_per_hour: 2.5      # USD, modelling assumption (e.g. cloud GPU rate)
+    training_hours: 720                  # 30 days
+    storage_cost: 20000                  # USD, modelling assumption
+    networking_cost: 10000               # USD, modelling assumption
+
+  adapt_existing:
+    number_of_accelerators: 16
+    accelerator_cost_per_hour: 2.5
+    adaptation_hours: 240                 # 10 days
+    storage_cost: 8000
+
+# ---------------------------------------------------------------------------
+# INFRASTRUCTURE MODEL — scenario assumptions live in assumptions/cost_assumptions.csv
+# This section controls WHICH scenario is used for the headline comparison
+# figures/report, and sensitivity-analysis defaults.
+# ---------------------------------------------------------------------------
+infrastructure:
+  default_scenario: "MEDIUM"   # SMALL | MEDIUM | LARGE
+
+# ---------------------------------------------------------------------------
+# SENSITIVITY ANALYSIS
+# ---------------------------------------------------------------------------
+# Every row in cost_assumptions.csv carries its own confidence_or_uncertainty
+# (a +/- percentage). default_uncertainty_pct is only used as a fallback if
+# a row's value is missing/non-numeric. LOW = cost * (1 - pct/100),
+# HIGH = cost * (1 + pct/100). assignment_input rows (the assignment's data
+# cost rule) are never perturbed — they are a fixed fact, not an assumption.
+sensitivity:
+  default_uncertainty_pct: 25
+  levels: ["LOW", "BASE", "HIGH"]
+
+# ---------------------------------------------------------------------------
+# HEAPS INTEGRATION
+# ---------------------------------------------------------------------------
+heaps:
+  growth_multipliers: [2, 5, 10, 100]
+  required_columns:
+    - corpus_version
+    - token_count
+    - vocabulary_size
+    - K
+    - beta
+    - r_squared
+    - rmse
+  # Alternate column names that will be auto-detected and renamed to the
+  # canonical names above (case-insensitive match)
+  compatible_aliases:
+    beta: ["b", "heaps_beta", "exponent"]
+    K: ["k_const", "heaps_k", "constant"]
+    token_count: ["tokens", "n_tokens", "total_tokens"]
+    vocabulary_size: ["vocab_size", "vocabulary", "v"]
+    r_squared: ["r2", "rsq"]
+    rmse: ["root_mean_squared_error"]
+    corpus_version: ["version", "corpus_id"]
+
+# ---------------------------------------------------------------------------
+# VISUALIZATION
+# ---------------------------------------------------------------------------
+visualization:
+  dpi: 200
+  figure_size: [8, 6]

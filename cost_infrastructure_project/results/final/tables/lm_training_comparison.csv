@@ -1,0 +1,3 @@
+approach,compute_cost_usd,storage_cost_usd,networking_cost_usd,total_cost_usd,value_type
+FROM_SCRATCH,115200.0,20000,10000.0,145200.0,modelling_assumption
+ADAPT_EXISTING_MODEL,9600.0,8000,0.0,17600.0,modelling_assumption
