@@ -1,0 +1,78 @@
+# =============================================================================
+# CONFIGURATION — Zipf Analysis Project (standalone)
+# =============================================================================
+# Trimmed from the combined Bengali IR project's config.yaml: only sections
+# relevant to corpus statistics, Zipf analysis, and visualization are kept.
+# Cost/infrastructure/Heaps configuration lives in the separate
+# cost_infrastructure_project.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# GENERAL
+# ---------------------------------------------------------------------------
+general:
+  random_seed: 42
+  encoding: "utf-8"
+  default_mode: "demo"   # one of: demo | full
+
+# ---------------------------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------------------------
+paths:
+  data_raw_dir: "data/raw"
+  data_processed_dir: "data/processed"
+  data_demo_dir: "data/demo"
+
+  # Main expected corpus locations
+  processed_corpus: "data/processed/bengali_corpus.txt"
+  demo_corpus: "data/demo/demo_bengali_corpus.txt"
+
+  # Output root (mode-dependent subfolder is appended at runtime: final/ or demo/)
+  results_root: "results"
+
+# ---------------------------------------------------------------------------
+# CORPUS STATISTICS
+# ---------------------------------------------------------------------------
+corpus_stats:
+  top_k_tokens: 20          # how many most-frequent tokens to report by default
+  min_frequency: 1          # tokens with frequency below this are still counted
+
+  # Memory-safety settings for streaming large (multi-GB) corpora. The
+  # corpus is read in fixed-size byte chunks rather than all at once or
+  # line-by-line, so peak memory stays bounded regardless of file size or
+  # line length. See src/corpus_stats.py:count_corpus_tokens().
+  chunk_size_mb: 8                  # bytes read per chunk (8 MiB default)
+  progress_log_interval_mb: 250     # log progress roughly every N MB processed
+
+# ---------------------------------------------------------------------------
+# ZIPF ANALYSIS
+# ---------------------------------------------------------------------------
+zipf:
+  # Rank regions for piecewise analysis. These are DEFAULTS and will be
+  # automatically clipped/adapted to the actual vocabulary size at runtime.
+  piecewise_rank_regions:
+    - [1, 100]
+    - [101, 1000]
+    - [1001, 10000]
+    - [10001, 100000]
+    - [100001, null]        # null = open-ended, goes to end of vocabulary
+
+  # Coverage checkpoints for long-tail analysis (top-K words)
+  coverage_k_values: [10, 100, 1000, 10000]
+
+  # Frequency thresholds used for long-tail proportion statistics
+  long_tail_thresholds: [1, 2, 5, 10]
+
+  # Minimum number of observations required to attempt a linear fit
+  min_observations_for_fit: 5
+
+  # Whether to exclude rank=1 from the single overall fit (common practice
+  # since the most frequent word is often an outlier). Default: keep it (false)
+  exclude_rank_one: false
+
+# ---------------------------------------------------------------------------
+# VISUALIZATION
+# ---------------------------------------------------------------------------
+visualization:
+  dpi: 200
+  figure_size: [8, 6]
